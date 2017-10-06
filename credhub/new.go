@@ -4,6 +4,7 @@ import (
 	"net/url"
 
 	"github.com/cloudfoundry-incubator/credhub-cli/credhub/auth"
+	version "github.com/hashicorp/go-version"
 )
 
 // New provides a CredHub API client for the target server. Options can be
@@ -37,14 +38,16 @@ func New(target string, options ...Option) (*CredHub, error) {
 		return nil, err
 	}
 
-	if credhub.ServerVersion == "" {
-		info, err := credhub.Info()
+	return credhub, nil
+}
+
+func (ch *CredHub) ServerVersion() (*version.Version, error) {
+	if ch.cachedServerVersion == "" {
+		info, err := ch.Info()
 		if err != nil {
 			return nil, err
 		}
-
-		credhub.ServerVersion = info.App.Version
+		ch.cachedServerVersion = info.App.Version
 	}
-
-	return credhub, nil
+	return version.NewVersion(ch.cachedServerVersion)
 }
